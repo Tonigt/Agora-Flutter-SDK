@@ -9,6 +9,7 @@ buildscript {
   def kotlin_version = rootProject.ext.has('kotlin_version') ? rootProject.ext.get('kotlin_version') : '1.3.72'
 
   repositories {
+    maven { url 'http://maven.faceunity.com/repository/maven-public/' }
     mavenCentral()
     google()
   }
@@ -20,6 +21,7 @@ buildscript {
 
 rootProject.allprojects {
   repositories {
+    maven { url 'http://maven.faceunity.com/repository/maven-public/' }
     mavenCentral()
     google()
     maven { url 'https://www.jitpack.io' }
@@ -47,10 +49,17 @@ android {
   lintOptions {
     disable 'InvalidPackage'
   }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
 }
 
 dependencies {
   api 'com.github.agorabuilder:native-full-sdk:3.5.1'
-
+  api 'com.faceunity:core:7.4.1.0'
+  api 'com.faceunity:model:7.4.1.0'
+  implementation 'com.google.code.gson:gson:2.8.6'
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${safeExtGet('kotlin_version', '1.3.72')}"
 }

@@ -58,6 +58,7 @@ class AgoraRtcEnginePlugin : FlutterPlugin, MethodCallHandler, EventChannel.Stre
     platformViewRegistry: PlatformViewRegistry
   ) {
     applicationContext = context.applicationContext
+    manager.context = applicationContext
     methodChannel = MethodChannel(binaryMessenger, "agora_rtc_engine")
     methodChannel.setMethodCallHandler(this)
     eventChannel = EventChannel(binaryMessenger, "agora_rtc_engine/events")

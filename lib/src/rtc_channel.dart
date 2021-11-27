@@ -399,6 +399,8 @@ class RtcChannel with RtcChannelInterface {
   Future<void> resumeAllChannelMediaRelay() {
     return _invokeMethod('resumeAllChannelMediaRelay');
   }
+  
+  
 }
 
 /// @nodoc

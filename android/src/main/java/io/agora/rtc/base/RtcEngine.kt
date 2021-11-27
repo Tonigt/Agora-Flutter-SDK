@@ -1,9 +1,17 @@
 package io.agora.rtc.base
 
 import android.content.Context
+import com.faceunity.core.entity.FUBundleData
+import com.faceunity.core.faceunity.FUAIKit
+import com.faceunity.core.faceunity.FURenderKit
+import com.faceunity.core.model.bodyBeauty.BodyBeauty
+import com.faceunity.core.model.facebeauty.FaceBeauty
+import com.faceunity.core.model.makeup.SimpleMakeup
 import io.agora.rtc.*
 import io.agora.rtc.internal.EncryptionConfig
 import io.agora.rtc.models.UserInfo
+import io.faceunity.FURenderer
+import java.lang.Exception
 
 class IRtcEngine {
   interface RtcEngineInterface : RtcUserInfoInterface, RtcAudioInterface, RtcVideoInterface,
@@ -398,7 +406,9 @@ open class RtcEngineManager(
 ) : IRtcEngine.RtcEngineInterface {
   var engine: RtcEngine? = null
     private set
+  var context: Context? = null
   private var mediaObserver: MediaObserver? = null
+  private var type: _FuRenderChannel? = null
 
   fun release() {
     RtcEngine.destroy()
@@ -1354,4 +1364,317 @@ open class RtcEngineManager(
       )
     )
   }
+
+  fun furenderSetUp(params: Map<String, *>, callback: Callback) {
+    val auth: ArrayList<Int> = params["authPack"] as ArrayList<Int>
+    try {
+      FURenderer.getInstance().setup(context, auth)
+      if (params.containsKey("maxFace")) {
+        val maxFace: Int? = params["maxFace"] as Int?
+        if (maxFace != null) {
+          FUAIKit.getInstance().maxFaces = maxFace
+        }
+        var key: String = "skin";
+        if (params.containsKey(key) && params[key] is Map<*, *>) {
+          val map = params[key] as Map<*, *>
+          skinSetting(map as Map<String, *>, null)
+        }
+        key = "shape";
+        if (params.containsKey(key) && params[key] is Map<*, *>) {
+          val map = params[key] as Map<*, *>
+          shapeSetting(map as Map<String, *>, null)
+        }
+        key = "filter";
+        if (params.containsKey(key) && params[key] is Map<*, *>) {
+          val map = params[key] as Map<*, *>
+          filterSetting(map as Map<String, *>, null)
+        }
+        key = "makeUp";
+        if (params.containsKey(key) && params[key] is Map<*, *>) {
+          val map = params[key] as Map<*, *>
+          makeUpSetting(map as Map<String, *>, null)
+        }
+        key = "bodyBeauty";
+        if (params.containsKey(key) && params[key] is Map<*, *>) {
+          val map = params[key] as Map<*, *>
+          bodyBeauty(map as Map<String, *>, null)
+        }
+        callback.success(null)
+      }
+    }catch (e: Exception) {
+      callback.failure("furender setup failure", "furender setup failure")
+    }
+  }
+
+  private val bodyBeauty: BodyBeauty?
+    get() = FURenderKit.getInstance().bodyBeauty
+
+  private val makeUp: SimpleMakeup?
+    get() = FURenderKit.getInstance().makeup
+
+  private val beauty: FaceBeauty?
+    get() = FURenderKit.getInstance().faceBeauty
+
+  private fun resetValue(){
+    FUAIKit.getInstance().maxFaces = 4
+    when(this.type) {
+      _FuRenderChannel.MakeUp-> {
+        if (this.makeUp == null) {
+          return
+        }
+        this.makeUp!!.enable = true
+      }
+      _FuRenderChannel.Shape,_FuRenderChannel.Filter,_FuRenderChannel.Skin-> {
+        if (this.beauty == null) {
+          return
+        }
+        this.beauty!!.enable = true
+      }
+      _FuRenderChannel.BodyBeauty-> {
+        if (this.bodyBeauty == null) {
+          return
+        }
+        this.bodyBeauty!!.enable = true
+      }
+    }
+  }
+
+  fun skinSetting(params: Map<String, *>, callback: Callback?) {
+    if (this.type == null || (this.type != null && this.type != _FuRenderChannel.Skin)) {
+      this.type = _FuRenderChannel.Skin
+      this.resetValue()
+    }
+    var key = "blurLevel"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.blurIntensity = value
+    }
+    key = "colorLevel"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.colorIntensity = value
+    }
+    key = "redLevel"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.redIntensity = value
+    }
+    key = "sharpen"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.faceShapeIntensity = value
+    }
+    key = "eyeBright"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.eyeBrightIntensity = value
+    }
+    key = "toothWhiten"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.toothIntensity = value
+    }
+    key = "removePouchStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.removePouchIntensity = value
+    }
+    key = "removeNasolabialFoldsStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.removeLawPatternIntensity = value
+    }
+    callback?.success(null)
+  }
+
+  fun shapeSetting(params: Map<String, *>, callback: Callback?) {
+    if (this.type == null || (this.type != null && this.type != _FuRenderChannel.Shape)) {
+      this.type = _FuRenderChannel.Shape
+      this.resetValue()
+    }
+    var key = "cheekThinning"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.blurIntensity = value
+    }
+    key = "cheekV"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.cheekVIntensity = value
+    }
+    key = "cheekNarrow"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.cheekNarrowIntensity = value
+    }
+    key = "cheekSmall"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.cheekSmallIntensity = value
+    }
+    key = "intensityCheekbones"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.cheekBonesIntensity = value
+    }
+    key = "intensityLowerJaw"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.lowerJawIntensity = value
+    }
+    key = "eyeEnlarging"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.eyeEnlargingIntensity = value
+    }
+    key = "intensityEyeCircle"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.eyeCircleIntensity = value
+    }
+    key = "intensityChin"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.chinIntensity = value
+    }
+    key = "intensityForehead"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.forHeadIntensity = value
+    }
+    key = "intensityNose"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.noseIntensity = value
+    }
+    key = "intensityMouth"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.mouthIntensity = value
+    }
+    key = "intensityCanthus"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.canthusIntensity = value
+    }
+    key = "intensityEyeSpace"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.eyeSpaceIntensity = value
+    }
+    key = "intensityEyeRotate"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.eyeRotateIntensity = value
+    }
+    key = "intensityLongNose"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.longNoseIntensity = value
+    }
+    key = "intensityPhiltrum"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.philtrumIntensity = value
+    }
+    key = "intensitySmile"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.smileIntensity = value
+    }
+    callback?.success(null)
+  }
+
+  fun filterSetting(params: Map<String, *>, callback: Callback?){
+    if (this.type == null || (this.type != null && this.type != _FuRenderChannel.Filter)) {
+      this.type = _FuRenderChannel.Filter
+      this.resetValue()
+    }
+    var key = "imageName"
+    if (params.containsKey(key) && params[key] is String) {
+      val value = params[key] as String
+      this.beauty!!.filterName = value
+    }
+    key = "filterLevel"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.beauty!!.filterIntensity = value
+    }
+    callback?.success(null)
+  }
+
+  fun makeUpSetting(params: Map<String, *>, callback: Callback?) {
+    if (this.type == null || (this.type != null && this.type != _FuRenderChannel.MakeUp)) {
+      this.type = _FuRenderChannel.MakeUp
+      this.resetValue()
+    }
+    var key = "imageName"
+    if (params.containsKey(key) && params[key] is String?) {
+      val value = params[key] as String?
+      if (value == null) {
+        this.makeUp!!.setCombinedConfig(null)
+        return
+      }
+      val path = "makeup/$value.bundle"
+      this.makeUp!!.setCombinedConfig(FUBundleData(path))
+    }
+    key = "intensity"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.makeUp!!.makeupIntensity = value
+    }
+    callback?.success(null)
+  }
+
+  fun bodyBeauty(params: Map<String, *>, callback: Callback?) {
+    if (this.type == null || (this.type != null && this.type != _FuRenderChannel.BodyBeauty)) {
+      this.type = _FuRenderChannel.BodyBeauty
+      this.resetValue()
+    }
+    var key = "bodySlimStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.bodySlimIntensity = value
+    }
+    key = "legSlimStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.legSlimIntensity = value
+    }
+    key = "waistSlimStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.waistSlimIntensity = value
+    }
+    key = "shoulderSlimStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.shoulderSlimIntensity = value
+    }
+    key = "bodySlimStrength"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.bodySlimIntensity = value
+    }
+    key = "headSlim"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.headSlimIntensity = value
+    }
+    key = "legSlim"
+    if (params.containsKey(key) && params[key] is Double) {
+      val value = params[key] as Double
+      this.bodyBeauty!!.legSlimIntensity = value
+    }
+    callback?.success(null)
+  }
+}
+
+
+enum class _FuRenderChannel {
+  Skin,
+  Shape,
+  Filter,
+  MakeUp,
+  BodyBeauty
 }

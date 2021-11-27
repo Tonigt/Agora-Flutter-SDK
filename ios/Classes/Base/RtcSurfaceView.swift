@@ -1,6 +1,7 @@
 import AgoraRtcKit
 import Foundation
 import UIKit
+import FURenderKit
 
 class RtcSurfaceView: UIView {
     private var surface: UIView
@@ -60,6 +61,7 @@ class RtcSurfaceView: UIView {
         addSubview(surface)
         canvas.view = surface
         if canvas.uid == 0 {
+//            engine.setLocalVideoRenderer(CustomFurenderVideo())
             engine.setupLocalVideo(canvas)
         } else {
             engine.setupRemoteVideo(canvas)
@@ -94,5 +96,40 @@ class RtcSurfaceView: UIView {
                 surface.frame = CGRect(origin: CGPoint(x: 0, y: 0), size: rect.size)
             }
         }
+    }
+}
+
+private class CustomFurenderVideo: NSObject, AgoraVideoSinkProtocol {
+    func shouldInitialize() -> Bool {
+        return true
+    }
+    
+    func shouldStart() {
+        
+    }
+    
+    func shouldStop() {
+        
+    }
+    
+    func shouldDispose() {
+        
+    }
+    
+    func bufferType() -> AgoraVideoBufferType {
+        return .pixelBuffer
+    }
+    
+    func pixelFormat() -> AgoraVideoPixelFormat {
+        return .NV12
+    }
+    
+    func renderPixelBuffer(_ pixelBuffer: CVPixelBuffer, rotation: AgoraVideoRotation) {
+        let input: FURenderInput = FURenderInput()
+        input.renderConfig.imageOrientation = FUImageOrientationUP
+        input.pixelBuffer = pixelBuffer
+        input.renderConfig.gravityEnable = true
+        input.renderConfig.readBackToPixelBuffer = true
+        FURenderKit.share().render(with: input)
     }
 }

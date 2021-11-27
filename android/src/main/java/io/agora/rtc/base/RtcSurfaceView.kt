@@ -1,12 +1,24 @@
 package io.agora.rtc.base
 
 import android.content.Context
+import android.util.AttributeSet
 import android.view.SurfaceView
 import android.widget.FrameLayout
+import com.faceunity.core.enumeration.CameraFacingEnum
+
 import io.agora.rtc.RtcChannel
 import io.agora.rtc.RtcEngine
+import io.agora.rtc.gl.EglBase
+import io.agora.rtc.gl.RendererCommon.GlDrawer
+import io.agora.rtc.mediaio.AgoraSurfaceView
+import io.agora.rtc.mediaio.BaseVideoRenderer
+import io.agora.rtc.mediaio.IVideoSink
+import io.agora.rtc.mediaio.MediaIO
 import io.agora.rtc.video.VideoCanvas
 import java.lang.ref.WeakReference
+import io.faceunity.FURenderer
+import java.nio.ByteBuffer
+
 
 class RtcSurfaceView(
   context: Context
@@ -19,7 +31,7 @@ class RtcSurfaceView(
 
   init {
     try {
-      surface = RtcEngine.CreateRendererView(context)
+      surface = RtcEngine.CreateRendererView(context)//CustomFuRenderVideo(context)
     } catch (e: UnsatisfiedLinkError) {
       throw RuntimeException("Please init RtcEngine first!")
     }
@@ -68,7 +80,7 @@ class RtcSurfaceView(
 
   private fun setupVideoCanvas(engine: RtcEngine) {
     removeAllViews()
-    surface = RtcEngine.CreateRendererView(context.applicationContext)
+    surface = RtcEngine.CreateRendererView(context.applicationContext)//CustomFuRenderVideo(context)
     surface.setZOrderMediaOverlay(isMediaOverlay)
     surface.setZOrderOnTop(onTop)
     addView(surface)
@@ -108,5 +120,38 @@ class RtcSurfaceView(
     val height: Int = MeasureSpec.getSize(heightMeasureSpec)
     surface.layout(0, 0, width, height)
     super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+  }
+}
+
+class CustomFuRenderVideo(context: Context): AgoraSurfaceView(context) {
+  private val mFuRender: FURenderer = FURenderer.getInstance()
+  override fun consumeTextureFrame(textureId: Int, format: Int, width: Int, height: Int, rotation: Int, timestamp: Long, matrix: FloatArray?) {
+    mFuRender.cameraFacing = CameraFacingEnum.CAMERA_FRONT
+    val texId = mFuRender.onDrawFrameSingleInput(textureId, width, height)
+    super.consumeTextureFrame(texId, format, width, height, rotation, timestamp, matrix);
+  }
+
+  override fun consumeByteBufferFrame(buffer: ByteBuffer?, format: Int, width: Int, height: Int, rotation: Int, ts: Long) {
+    super.consumeByteBufferFrame(buffer, format, width, height, rotation, ts)
+//    super.consumeByteBufferFrame(var1, var2, var3, var4, var5, var6)
+  }
+
+  override fun consumeByteArrayFrame(data: ByteArray?, pixelFormat: Int, width: Int, height: Int, rotation: Int, ts: Long) {
+//    mRender.consume(var1, var2, var3, var4, var5, var6)
+    super.consumeByteArrayFrame(data, pixelFormat, width, height, rotation, ts)
+  }
+
+
+  override fun getBufferType(): Int {
+    return MediaIO.BufferType.TEXTURE.intValue()
+  }
+
+  override fun getPixelFormat(): Int {
+    return MediaIO.PixelFormat.TEXTURE_2D.intValue()
+  }
+
+  override fun onDispose() {
+    super.onDispose()
+    mFuRender.release()
   }
 }
