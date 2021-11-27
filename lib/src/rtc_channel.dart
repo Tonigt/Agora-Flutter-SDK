@@ -52,6 +52,8 @@ abstract class RtcChannel {
     RtcChannelImpl.destroyAll();
   }
 
+}
+
   ///
   /// Sets the event handler for the RtcChannel object.
   /// After setting the channel event handler, you can listen for channel events and receive the statistics of the corresponding RtcChannel object.

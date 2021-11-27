@@ -109,7 +109,7 @@ abstract class RtcEngine {
   /// **return** The SDK version number. The format is a string.
   ///
   Future<String?> getSdkVersion();
-
+  
   ///
   /// Gets the warning or error description.
   ///
@@ -119,6 +119,60 @@ abstract class RtcEngine {
   /// **return** The specific error or warning description.
   ///
   Future<String?> getErrorDescription(int error);
+
+  @override
+  Future<void> enableVirtualBackground(
+      bool enabled, VirtualBackgroundSource backgroundSource) {
+    return _invokeMethod('enableVirtualBackground', {
+      'enabled': enabled,
+      'backgroundSource': backgroundSource.toJson(),
+    });
+  }
+
+  /// 相芯启动
+  Future setUpFuRender(dynamic value, {int maxFaces: 4, Map<String, dynamic> parameter = const {}}) async{
+    await _methodChannel.invokeMethod("furenderSetUp",
+        {
+          "authPack": value,
+          "maxFace": maxFaces
+        }..addAll(parameter));
+    return null;
+  }
+
+  /// 值改变
+  Future furenderValueChange({List<MapEntry<String, double>>? values, required String method}) async{
+    Map<String, double> m = {};
+    if (values != null && values.length > 0) {
+      m.addEntries(values);
+    }else {
+      return;
+    }
+
+    await _methodChannel.invokeMethod(method, m);
+    return;
+  }
+
+  /// 补妆改变
+  Future makeUpChange({String? imageName, required double value}) async{
+    Map<String, dynamic> dic = {
+      "imageName": imageName,
+      "intensity": value
+    };
+    await _methodChannel.invokeMethod("makeUpSetting", dic);
+    return;
+  }
+
+  /// 滤镜改变
+  Future filterChange({required String imageName, required double value}) async{
+    Map<String, dynamic> dic = {
+      "imageName": imageName,
+      "filterLevel": value
+    };
+    await _methodChannel.invokeMethod("filterSetting", dic);
+    return;
+  }
+
+}
 
   ///
   /// Releases the RtcEngine instance.
