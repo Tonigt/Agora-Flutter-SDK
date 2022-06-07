@@ -52,6 +52,10 @@ abstract class RtcChannel {
     RtcChannelImpl.destroyAll();
   }
 
+  @override
+  Future<void> resumeAllChannelMediaRelay() {
+    return _invokeMethod('resumeAllChannelMediaRelay');
+  }
 }
 
   ///
